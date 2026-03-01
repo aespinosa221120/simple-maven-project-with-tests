@@ -1,30 +1,9 @@
-pipeline {
-    agent any
-
-    stages {
-        stage('Checkout') {
-            steps {
-                git 'https://github.com/aespinosa221120/simple-maven-project-with-tests.git'
-            }
-        }
-
-        stage('Build') {
-            steps {
-                sh 'mvn clean package'
-            }
-        }
-
-        stage('Long Running Work') {
-            steps {
-                echo 'Sleeping for 1000 seconds...'
-                sleep 1000
-            }
-        }
-
-        stage('Post Build') {
-            steps {
-                echo 'Build Finished!'
-            }
-        }
+podTemplate(containers: [containerTemplate(name: 'maven', image: 'maven', command: 'sleep', args: 'infinity')]) {
+  node(POD_LABEL) {
+    checkout scm
+    container('maven') {
+      sh 'mvn -B -ntp -Dmaven.test.failure.ignore verify'
     }
+    junit '**/target/surefire-reports/TEST-*.xml'
+  }
 }
