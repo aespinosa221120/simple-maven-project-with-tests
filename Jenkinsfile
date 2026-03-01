@@ -1,19 +1,9 @@
-pipeline {
-    agent any
-    tools {
-        maven "M3"
+podTemplate(containers: [containerTemplate(name: 'maven', image: 'maven', command: 'sleep', args: 'infinity')]) {
+  node(POD_LABEL) {
+    checkout scm
+    container('maven') {
+      sh 'mvn -B -ntp -Dmaven.test.failure.ignore verify'
     }
-    stages {
-        stage('Build') {
-            steps {
-                sh "mvn -Dmaven.test.failure.ignore=true clean package"
-            }
-            post {
-                success {
-                    junit '**/target/surefire-reports/TEST-*.xml'
-                    archiveArtifacts 'target/*.jar'
-                }
-            }
-        }
-    }
+    junit '**/target/surefire-reports/TEST-*.xml'
+  }
 }
